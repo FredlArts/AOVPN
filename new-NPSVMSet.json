@@ -1,0 +1,230 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS1_v2",
+            "allowedValues": [
+                "Standard_A3",
+                "Standard_DS1_v2",
+                "Standard_DS2_v2"
+            ],
+            "metadata": {
+                "description": "Virtual machine."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Default Admin username"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Default Admin password"
+            }
+        },
+        "sourceImageSKU": {
+            "type": "string",
+            "allowedValues": [
+                "2016-Datacenter-Server-Core-smalldisk",
+                "2016-Datacenter-Server-Core",
+                "2016-Datacenter-smalldisk",
+                "2016-Datacenter"
+            ]
+        },
+        "networkSecurityGroupName": {
+                "type": "string",
+                "metadata": {
+                    "description": "Name of the Network Security Group."
+                }
+            },
+            "NonManagementIPRanges": {
+                "type": "array",
+                "metadata": {
+                    "description": "IP ranges not used for management servers."
+                }
+            },
+            "NPSServerIntIPs": {
+                "type": "array",
+                "metadata": {
+                    "description": "IP of NPS servers' internal NICs."
+                }
+            }
+    },
+    "variables": {
+        "availabilitySetName": "AONVPNNPS01",
+        "VMnamePrefix": "AZWENPS",
+        "VMinstances": 2,
+        "startWithVM": 11,
+        "virtualNetworkName": "VNET_WEU_AOVPN01",
+        "subnet1Name": "BE-Server",
+        "subnet1RangePart": "10.14.1.",
+        "subnet1Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet1Name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[variables('availabilitySetName')]",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Aligned"
+            },
+            "properties": {
+                "platformFaultDomainCount": 2,
+                "platformUpdateDomainCount": 2
+            }
+        },
+        {
+            "name": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')))]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "comments": "This is the virtual machine that you're building.",
+            "copy": {
+                "name": "virtualMachineLoop",
+                "count": "[variables('VMinstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint')]",
+                "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')))]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    }
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('sourceImageSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "properties": {
+                                "primary": true
+                            },
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            }
+        },
+        {
+            "name": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "comments": "NIC connected to the internal DMZ",
+            "dependsOn": [
+                "[parameters('networkSecurityGroupName')]"
+            ],
+            "copy": {
+                "count": "[variables('VMinstances')]",
+                "name": "NICintLoop"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnet1Ref')]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[concat(variables('subnet1rangePart'), add(copyIndex(variables('startWithVM')), 10))]",
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "comments": "Network Security Group",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-rdp",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "Tcp",
+                            "destinationPortRange": "3389",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "ALLOW_ALL_Inside_Service",
+                        "properties": {
+                            "description": "Allow inbound traffic for services provided.",
+                            "access": "Allow",
+                            "destinationAddressPrefix": "",
+                            "sourceAddressPrefix": "VirtualNetwork",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": "[parameters('NPSserverintIPs')]",
+                            "sourceAddressPrefixes": [],
+                            "priority": 500,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "DENY_ALL_NonAzureMgmt_Inbound",
+                        "properties": {
+                            "description": "Block inbound non management Agrana traffic",
+                            "access": "Deny",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "sourceAddressPrefix": "",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": [],
+                            "sourceAddressPrefixes": "[parameters('NonManagementIPRanges')]",
+                            "priority": 4090,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
