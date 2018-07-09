@@ -9,13 +9,13 @@
             }
         },
         "adminUserName": {
-            "value": "agranaroot",
+            "value": "grosseibel",
             "metadata": {
                 "description": "Provide your administrator account name (not allowed: admin, administrator, root)."
             }
         },
         "adminPassword": {
-            "value": "abc123!!!$$$",
+            "value": "TinkiWinkiLalaPo01!",
             "metadata": {
                 "description": "This is the ultra secret password."
             }
