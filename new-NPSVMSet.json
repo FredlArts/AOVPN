@@ -28,6 +28,7 @@
         },
         "sourceImageSKU": {
             "type": "string",
+            "defaultValue": "2016-Datacenter",
             "allowedValues": [
                 "2016-Datacenter-Server-Core-smalldisk",
                 "2016-Datacenter-Server-Core",
