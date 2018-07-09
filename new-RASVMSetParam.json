@@ -25,6 +25,12 @@
             "metadata": {
                 "description": "Select Windows Server edition."
             }
+        },
+        "createNICextWithPIP": {
+            "value": "No",
+            "metadata": {
+                "description": "Create public IPs for the external Interfaces."
+            }
         }
     }
 }

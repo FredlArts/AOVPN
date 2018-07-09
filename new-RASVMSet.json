@@ -25,6 +25,9 @@
                 "description": "Default Admin password"
             }
         },
+        "createNICextWithPIP": {
+            "type": "string"
+        },
         "sourceImageSKU": {
             "type": "string",
             "allowedValues": [
