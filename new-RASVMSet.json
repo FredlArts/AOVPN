@@ -60,7 +60,7 @@
         "subnet2RangePart": "10.13.129.",
         "subnet1Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet1Name'))]",
         "subnet2Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet2Name'))]",
-        "networkSecurityGroupName": "RasVmNsg"
+        "networkSecurityGroupName": "AZWE_RAS_NSG"
     
 },
 "resources": [
