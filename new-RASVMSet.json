@@ -33,14 +33,8 @@
                 "2016-Datacenter-smalldisk",
                 "2016-Datacenter"
             ]
-        },
-        "createNICextWithPIP": {
-            "type": "string",
-            "allowedValues": [
-                "Yes",
-                "No"
-            ]
         }
+
     },
     "variables": {
         "availabilitySetName": "AONVPNRAS01",
