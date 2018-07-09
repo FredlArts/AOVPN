@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineSize": {
+            "value": "Standard_DS1_v2",
+            "metadata": {
+                "description": "Select Virtual Machine with at least 2 NICs."
+            }
+        },
+        "adminUserName": {
+            "value": "grosseibel",
+            "metadata": {
+                "description": "Provide your administrator account name (not allowed: admin, administrator, root)."
+            }
+        },
+        "adminPassword": {
+            "value": "TinkiWinkiLalaPo01!",
+            "metadata": {
+                "description": "This is the ultra secret password."
+            }
+        },
+        "sourceImageSKU": {
+            "value": "2016-Datacenter",
+            "metadata": {
+                "description": "Select Windows Server edition."
+            }
+        }
+    }
+}

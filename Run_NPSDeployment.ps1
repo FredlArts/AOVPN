@@ -8,4 +8,4 @@ New-AzureRmResourceGroupDeployment -Name new-NPSVMSet -ResourceGroupName AOVPN-T
 
 New-AzureRmResourceGroupDeployment -Name new-RASVMSet -ResourceGroupName AOVPN-Test -TemplateUri https://raw.githubusercontent.com/fredlarts/AOVPN/master/new-RASVMSet.json
 
-New-AzureRmResourceGroupDeployment -Name new-RASVMNSG -ResourceGroupName AOVPN-Test -TemplateUri https://raw.githubusercontent.com/fredlarts/AOVPN/master/new-RASVMNSG.json -TemplateParameterUri https://raw.githubusercontent.com/fredlarts/AOVPN/master/new-RASVMNSGParam.json
+New-AzureRmResourceGroupDeployment -Name new-RASVMNSG -ResourceGroupName AOVPN-Test -TemplateUri https://raw.githubusercontent.com/fredlarts/AOVPN/master/new-RASVMNSG.JSON -TemplateParameterUri https://raw.githubusercontent.com/fredlarts/AOVPN/master/new-RASVMNSGParam.json

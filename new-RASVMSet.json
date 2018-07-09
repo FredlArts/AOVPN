@@ -4,7 +4,6 @@
     "parameters": {
         "virtualMachineSize": {
             "type": "string",
-            "defaultValue": "Standard_DS1_v2",
             "allowedValues": [
                 "Standard_A3",
                 "Standard_DS1_v2",
@@ -28,7 +27,6 @@
         },
         "sourceImageSKU": {
             "type": "string",
-            "defaultValue": "2016-Datacenter",
             "allowedValues": [
                 "2016-Datacenter-Server-Core-smalldisk",
                 "2016-Datacenter-Server-Core",
