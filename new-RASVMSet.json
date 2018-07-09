@@ -1,0 +1,270 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS1_v2",
+            "allowedValues": [
+                "Standard_A3",
+                "Standard_DS1_v2",
+                "Standard_DS2_v2"
+            ],
+            "metadata": {
+                "description": "Virtual machine must have 2 NICs at least."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Default Admin username"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Default Admin password"
+            }
+        },
+        "sourceImageSKU": {
+            "type": "string",
+            "allowedValues": [
+                "2016-Datacenter-Server-Core-smalldisk",
+                "2016-Datacenter-Server-Core",
+                "2016-Datacenter-smalldisk",
+                "2016-Datacenter"
+            ]
+        },
+        "createNICextWithPIP": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ]
+        }
+    },
+    "variables": {
+        "availabilitySetName": "AONVPNRAS01",
+        "VMnamePrefix": "AZWERAS",
+        "VMinstances": 2,
+        "startWithVM": 11,
+        "virtualNetworkName": "VNET_WEU_AOVPN01",
+        "subnet1Name": "BE-Server",
+        "subnet2Name": "DMZ",
+        "publicIPAddressName": "AZWERASPIP",
+        "virtualNetworkSpace": "10.13.128.0/17",
+        "subnet1Range": "10.13.128.0/24",
+        "subnet2Range": "10.13.129.0/24",
+        "subnet1RangePart": "10.13.128.",
+        "subnet2RangePart": "10.13.129.",
+        "subnet1Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet1Name'))]",
+        "subnet2Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet2Name'))]",
+        "networkSecurityGroupName": "RasVmNsg"
+    
+},
+"resources": [
+    {
+        "type": "Microsoft.Compute/availabilitySets",
+        "name": "[variables('availabilitySetName')]",
+        "apiVersion": "2017-12-01",
+        "location": "[resourceGroup().location]",
+        "sku": {
+            "name": "Aligned"
+        },
+        "properties": {
+            "platformFaultDomainCount": 2,
+            "platformUpdateDomainCount": 2
+        }
+    },
+    {
+        "name": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')))]",
+        "type": "Microsoft.Compute/virtualMachines",
+        "apiVersion": "2017-12-01",
+        "location": "[resourceGroup().location]",
+        "comments": "This is the virtual machine that you're building.",
+        "copy": {
+            "name": "virtualMachineLoop",
+            "count": "[variables('VMinstances')]"
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+            "[concat('Microsoft.Network/networkInterfaces/', variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICext')]",
+            "[concat('Microsoft.Network/networkInterfaces/', variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint')]",
+            "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+        ],
+        "properties": {
+            "availabilitySet": {
+                "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+            },
+            "licenseType": "Windows_Server",
+            "osProfile": {
+                "computerName": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')))]",
+                "adminUsername": "[parameters('adminUsername')]",
+                "adminPassword": "[parameters('adminPassword')]",
+                "windowsConfiguration": {
+                    "provisionVMAgent": true,
+                    "enableAutomaticUpdates": true
+                }
+            },
+            "hardwareProfile": {
+                "vmSize": "[parameters('virtualMachineSize')]"
+            },
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "[parameters('sourceImageSKU')]",
+                    "version": "latest"
+                },
+                "osDisk": {
+                    "createOption": "FromImage"
+                },
+                "dataDisks": []
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "properties": {
+                            "primary": true
+                        },
+                        "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICext'))]"
+                    },
+                    {
+                        "properties": {
+                            "primary": false
+                        },
+                        "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint'))]"
+                    }
+                ]
+            },
+            "diagnosticsProfile": {
+                "bootDiagnostics": {
+                    "enabled": false
+                }
+            }
+        }
+    },
+    {
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[variables('virtualNetworkName')]",
+        "apiVersion": "2018-03-01",
+        "location": "[resourceGroup().location]",
+        "comments": "This will build a Virtual Network.",
+        "properties": {
+            "addressSpace": {
+                "addressPrefixes": [
+                    "[variables('virtualNetworkSpace')]"
+                ]
+            },
+            "dhcpOptions": {
+                "dnsServers": [
+                    "10.13.1.4",
+                    "10.12.1.6"
+                ]
+            },
+            "subnets": [
+                {
+                    "name": "[variables('subnet1Name')]",
+                    "properties": {
+                        "addressPrefix": "[variables('subnet1Range')]"
+                    }
+                },
+                {
+                    "name": "[variables('subnet2Name')]",
+                    "properties": {
+                        "addressPrefix": "[variables('subnet2Range')]"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "name": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICint')]",
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2017-06-01",
+        "location": "[resourceGroup().location]",
+        "comments": "NIC connected to the internal DMZ",
+        "dependsOn": [
+            "[concat(variables('publicIpAddressName'), copyIndex(variables('startWithVM')))]",
+            "[variables('virtualNetworkName')]"
+        ],
+        "copy": {
+            "count": "[variables('VMinstances')]",
+            "name": "NICextLoop"
+        },
+        "properties": {
+            "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "subnet": {
+                            "id": "[variables('subnet1Ref')]"
+                        },
+                        "privateIPAllocationMethod": "Static",
+                        "privateIPAddress": "[concat(variables('subnet1rangePart'), copyIndex(variables('startWithVM')))]",
+                        "privateIPAddressVersion": "IPv4"
+                    }
+                }
+            ],
+            "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+            }
+        }
+    },
+    {
+        "name": "[concat(variables('VMnamePrefix'), copyIndex(variables('startWithVM')), 'NICext')]",
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2017-06-01",
+        "condition": "[equals(parameters('createNICextWithPIP'), 'Yes')]",
+        "location": "[resourceGroup().location]",
+        "comments": "NIC connected to the external DMZ.",
+        "tags": {
+            "traffic": "external"
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "copy": {
+            "count": "[variables('VMinstances')]",
+            "name": "NICintLoop"
+        },
+        "properties": {
+            "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+            },
+            "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "subnet": {
+                            "id": "[variables('subnet2Ref')]"
+                        },
+                        "privateIPAllocationMethod": "Static",
+                        "privateIPAddress": "[concat(variables('subnet2rangePart'), copyIndex(variables('startWithVM')))]",
+                        "privateIPAddressVersion": "IPv4",
+                        "publicIpAddress": {
+                            "id": "[resourceId('Microsoft.Network/publicIpAddresses', concat(variables('publicIpAddressName'), copyIndex(variables('startWithVM'))))]"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "name": "[concat(variables('publicIpAddressName'), copyIndex(variables('startWithVM')))]",
+        "type": "Microsoft.Network/publicIPAddresses",
+        "apiVersion": "2017-06-01",
+        "condition": "[equals(parameters('createNICextWithPIP'), 'Yes')]",
+        "location": "[resourceGroup().location]",
+        "comments": "Public IP for your NIC",
+        "copy": {
+            "count": "[variables('VMinstances')]",
+            "name": "PIPloop"
+        },
+        "properties": {
+            "publicIPAllocationMethod": "Static"
+        }
+    }
+],
+"outputs": {}
+}
