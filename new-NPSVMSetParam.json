@@ -43,6 +43,15 @@
                 "10.200.210.24"
             ]
         },
+        "NPSServerIntIPs": {
+            "metadata": {
+                "description": "NPS server internal IPs"
+            },
+            "value": [
+                "10.13.128.11",
+                "10.13.128.12"
+            ]
+        },
         "ManagementServers": {
             "metadata": {
                 "description": "IP addresses of Management Servers."
