@@ -27,7 +27,7 @@
             }
         },
         "createNICextWithPIP": {
-            "value": "No",
+            "value": "Yes",
             "metadata": {
                 "description": "Create public IPs for the external Interfaces."
             }
