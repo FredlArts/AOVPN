@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "networkSecurityGroupName": {
+      "metadata": {
+        "description": "Name of the Network Security Group"
+      },
+      "value": "RasVmNsg"
+    }
+    ,
+    "RDPGatewayIPs": {
+      "metadata": {
+        "description": "Agrana RDP Gateway IPs."
+      },
+      "value": [
+        "10.200.210.20",
+        "10.200.210.21",
+        "10.200.210.22",
+        "10.200.210.24"
+      ]
+    },
+    "ManagementServers": {
+      "metadata": {
+        "description": "IP addresses of Management Servers."
+      },
+      "value": [
+        "10.200.210.162",
+        "10.200.224.25",
+        "10.200.223.15"
+      ]
+    },
+    "NonManagementIPRanges": {
+      "metadata": {
+        "description": "IP ranges not used for management servers."
+      },
+      "value": [
+        "10.200.0.0/16",
+        "10.210.0.0/16",
+        "10.220.0.0/16",
+        "10.215.0.0/16",
+        "10.216.0.0/16",
+        "10.217.0.0/16",
+        "10.218.0.0/16",
+        "10.12.0.0/17",
+        "10.13.0.0/17",
+        "10.16.0.0/17",
+        "10.21.0.0/17",
+        "10.14.0.0/17"
+      ]
+    },
+    "RASserverNICintIPs": {
+      "metadata": {
+        "description": "Agrana RAS Server IPs (internal NIC)."
+      },
+      "value": [
+        "10.13.128.11",
+        "10.13.128.12"
+      ]
+    },
+    "RASserverNICextIPs": {
+      "metadata": {
+        "description": "Agrana RAS Server IPs (external NIC)."
+      },
+      "value": [
+        "10.13.129.11",
+        "10.13.129.12"
+      ]
+    }
+  }
+}

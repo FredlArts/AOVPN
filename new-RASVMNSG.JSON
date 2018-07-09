@@ -1,0 +1,154 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "networkSecurityGroupName": {
+            "type": "string"
+        },
+        "RDPGatewayIPs": {
+            "type": "array",
+            "metadata": {
+                "description": "Agrana RDP Gateway IPs."
+            }
+        },
+        "ManagementServers": {
+            "type": "array",
+            "metadata": {
+                "description": "Agrana Management Server IPs."
+            }
+        },
+        "NonManagementIPRanges": {
+            "type": "array",
+            "metadata": {
+                "description": "IP ranges not used for management servers."
+            }
+        },
+        "RASserverNICintIPs": {
+            "type": "array",
+            "metadata": {
+                "description": "Agrana RAS Server IPs (internal NIC)."
+            }
+        },
+        "RASserverNICextIPs": {
+            "type": "array",
+            "metadata": {
+                "description": "Agrana RAS Server IPs (external NIC)."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('networkSecurityGroupName')]",
+            "location": "[resourceGroup().location]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2018-04-01",
+            "properties": {
+                "defaultSecurityRules": [
+                    {
+                        "name": "AllowVnetInBound",
+                        "properties": {
+                            "description": "Allow inbound traffice from all VMs in VNET",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "VirtualNetwork",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Allow",
+                            "priority": 65000,
+                            "direction": "Inbound",
+                            "destinationAddressPrefixes": [],
+                            "sourceAddressPrefixes": []
+                        }
+                    }
+                ],
+                "securityRules": [
+                    {
+                        "name": "Allow_RDPviaGateways",
+                        "properties": {
+                            "description": "Allow inbound RDP traffic via Gateways.",
+                            "access": "Allow",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "sourceAddressPrefix": "",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": [],
+                            "sourceAddressPrefixes": "[parameters('RDPGatewayIPs')]",
+                            "priority": 700,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "Allow_Inbound_FullManagement",
+                        "properties": {
+                            "description": "Allow inbound traffic from Management Servers.",
+                            "access": "Allow",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "sourceAddressPrefix": "",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": [],
+                            "sourceAddressPrefixes": "[parameters('ManagementServers')]",
+                            "priority": 600,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "ALLOW_ALL_Inside_Service",
+                        "properties": {
+                            "description": "Allow inbound traffic for services provided.",
+                            "access": "Allow",
+                            "destinationAddressPrefix": "",
+                            "sourceAddressPrefix": "VirtualNetwork",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": "[parameters('RASserverNICintIPs')]",
+                            "sourceAddressPrefixes": [],
+                            "priority": 500,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "DENY_ALL_NonAzureMgmt_Inbound",
+                        "properties": {
+                            "description": "Block inbound non management Agrana traffic",
+                            "access": "Deny",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "sourceAddressPrefix": "",
+                            "destinationPortRange": "*",
+                            "protocol": "*",
+                            "destinationAddressPrefixes": [],
+                            "sourceAddressPrefixes": "[parameters('NonManagementIPRanges')]",
+                            "priority": 4090,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    },
+                    {
+                        "name": "ALLOW_VPN_from_Internet",
+                        "properties": {
+                            "description": "Allow inbound VPN traffic",
+                            "access": "Allow",
+                            "destinationAddressPrefix": "",
+                            "sourceAddressPrefix": "Internet",
+                            "destinationPortRanges": [
+                                "500",
+                                "4500"
+                            ],
+                            "protocol": "Udp",
+                            "destinationAddressPrefixes": "[parameters('RASserverNICextIPs')]",
+                            "sourceAddressPrefixes": [],
+                            "priority": 800,
+                            "direction": "Inbound",
+                            "sourcePortRange": "*"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
