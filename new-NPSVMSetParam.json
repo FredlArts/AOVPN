@@ -45,7 +45,7 @@
         },
         "NPSServerIntIPs": {
             "metadata": {
-                "description": "NPS server internal IPs"
+                "description": "NPS servers internal IPs."
             },
             "value": [
                 "10.13.128.11",

@@ -63,7 +63,7 @@
         "NPSServerIntIPs": {
                 "type": "array",
                 "metadata": {
-                    "description": "IP of NPS servers' internal NICs."
+                    "description": "NPS servers internal IPs."
                 }
             }
     },
