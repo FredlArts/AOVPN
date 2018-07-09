@@ -40,14 +40,14 @@
 
     },
     "variables": {
-        "availabilitySetName": "AONVPNRAS01",
+        "availabilitySetName": "AZWE_AONVPNRAS",
         "VMnamePrefix": "AZWERAS",
         "VMinstances": 2,
         "startWithVM": 11,
         "virtualNetworkName": "VNET_WEU_AOVPN01",
         "subnet1Name": "BE-Server",
         "subnet2Name": "DMZ",
-        "publicIPAddressName": "AZWERASPIP",
+        "publicIPAddressName": "AZWE_RASPIP",
         "virtualNetworkSpace": "10.13.128.0/17",
         "subnet1Range": "10.13.128.0/24",
         "subnet2Range": "10.13.129.0/24",

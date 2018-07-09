@@ -68,7 +68,7 @@
             }
     },
     "variables": {
-        "availabilitySetName": "AONVPNNPS01",
+        "availabilitySetName": "AZWE_AONVPNNPS",
         "VMnamePrefix": "AZWENPS",
         "VMinstances": 2,
         "startWithVM": 11,
