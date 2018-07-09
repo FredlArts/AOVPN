@@ -61,7 +61,7 @@
         "startWithVM": 11,
         "virtualNetworkName": "VNET_WEU_AOVPN01",
         "subnet1Name": "BE-Server",
-        "subnet1RangePart": "10.14.1.",
+        "subnet1RangePart": "10.13.128.",
         "subnet1Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnet1Name'))]"
     },
     "resources": [
