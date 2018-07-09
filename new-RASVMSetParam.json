@@ -25,6 +25,12 @@
             "metadata": {
                 "description": "Select Windows Server edition."
             }
+        },
+        "createNICextWithPIP": {
+            "value": "No",
+            "metadata": {
+                "description": "Select if external PubIPs are created for the RAS NICs."
+            }
         }
     }
 }
